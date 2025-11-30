@@ -1,13 +1,13 @@
 import argparse
+
 import cv2
 import numpy as np
-
-from libs.extract_ROI.select_ROIs_widget import SelectROIsWidget
-from libs.pdf_to_image import convert_pdf_to_image, resize_image
 from libs.extract_ROI.autodect import detect_rectangles, find_residuals
-from libs.logsheet_config import LogsheetConfig
-from libs.region import ROI
 from libs.extract_ROI.cli_inputs import process_cli
+from libs.extract_ROI.select_ROIs_widget import SelectROIsWidget
+from libs.logsheet_config import LogsheetConfig
+from libs.pdf_to_image import convert_pdf_to_image, resize_image
+from libs.region import ROI
 
 
 def main(filename, autodetect, autodetect_filter, output_file, config_file, detect_residuals, credentials, display_residuals):
@@ -45,12 +45,7 @@ def main(filename, autodetect, autodetect_filter, output_file, config_file, dete
         height, width, _ = image.shape
         config = LogsheetConfig(rectangles, residuals, height, width)
 
-    ROIs_widget = SelectROIsWidget(image, config, display_residuals)
-
-    process_cli(ROIs_widget)
-
-    cv2.destroyAllWindows()
-    ROIs_widget.config.export_to_json(output_file)
+    config.export_to_json(output_file)
 
 
 if __name__ == '__main__':
