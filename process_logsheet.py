@@ -1,24 +1,26 @@
 import argparse
-import numpy as np
 import json
 
-from libs.pdf_to_image import convert_pdf_to_image, resize_image
+import numpy as np
 from libs.logsheet_config import LogsheetConfig
+from libs.pdf_to_image import (convert_pdf_to_image, get_image_size,
+                               resize_image)
 from libs.processing.align_images import align_images
 from libs.processing.read_content import process_content
 from libs.processing.store_results import store_results
 from libs.services.call_services import call_services
-from libs.visualise_regions import annotate_pdfs
-from libs.pdf_to_image import get_image_size
 from libs.statistics import compute_success_ratio
+from libs.visualise_regions import annotate_pdfs
 
 
 def load_credentials(google_credentials, amazon_credentials, azure_credentials):
-    with open(amazon_credentials, 'r') as f:
-        amazon_credentials = json.load(f)
+    if amazon_credentials is not None:
+        with open(amazon_credentials, 'r') as f:
+            amazon_credentials = json.load(f)
 
-    with open(azure_credentials, 'r') as f:
-        azure_credentials = json.load(f)
+    if azure_credentials is not None:
+        with open(azure_credentials, 'r') as f:
+            azure_credentials = json.load(f)
 
     return {'google': google_credentials, 'amazon': amazon_credentials, 'azure': azure_credentials}
 
@@ -114,9 +116,9 @@ if __name__ == '__main__':
     required.add_argument('--config_file', type=str, required=True, help='Path to JSON file containing config')
     required.add_argument('--output_file', type=str, required=True, help='Path to output xlsx file')
 
-    required.add_argument('--google', type=str, required=True, help='Path to Google vision credentials')
-    required.add_argument('--amazon', type=str, required=True, help='Path to Amazon vision credentials')
-    required.add_argument('--azure', type=str, required=True, help='Path to Azure vision credentials')
+    optional.add_argument('--google', type=str, required=False, help='Path to Google vision credentials')
+    optional.add_argument('--amazon', type=str, required=False, help='Path to Amazon vision credentials')
+    optional.add_argument('--azure', type=str, required=False, help='Path to Azure vision credentials')
 
     optional.add_argument('--debug', action=argparse.BooleanOptionalAction, default=False, help='Run in debug mode - output annotated PDF files.')
     optional.add_argument('--backside', action=argparse.BooleanOptionalAction, default=False, help='Backside page present.')
@@ -127,6 +129,9 @@ if __name__ == '__main__':
     optional.add_argument('--filter_grayscale', action=argparse.BooleanOptionalAction, default=False, help='During the alignment step, keep only the darkest pixels in grayscale.')
 
     args = args_parser.parse_args()
+
+    if args.google is None and args.amazon is None and args.azure is None:
+        args_parser.error('At least one OCR service credentials must be provided among --google, --amazon, and --azure.')
 
     if args.backside and (not args.backside_template or not args.backside_config):
         args_parser.error('The --backside argument requires --backside_template and --backside_config.')
