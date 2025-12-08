@@ -25,7 +25,7 @@ def preprocess_input(scanned_logsheet, template, page, dpi=300):
 
     return logsheet_image, template_image
 
-def automatic_align(scanned_logsheet, template, page=0, ):
+def automatic_align(scanned_logsheet, template, page=0):
     (logsheet_image, template_image) = preprocess_input(scanned_logsheet, template, page)
     alignment_data = get_alignment_data(logsheet_image, template_image)
 
@@ -33,7 +33,7 @@ def automatic_align(scanned_logsheet, template, page=0, ):
     
 
 def main(template_path, target_path, backside_template):
-    frontside_alignment_data = automatic_align(target_path, template_path )
+    frontside_alignment_data = automatic_align(target_path, template_path)
 
     if backside_template:
         backside_alignment_data = automatic_align(target_path, backside_template, page=1)
