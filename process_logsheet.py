@@ -9,7 +9,7 @@ from libs.pdf_to_image import (convert_pdf_to_image, get_image_size,
                                resize_image)
 from libs.processing.align_images import align_images
 from libs.processing.read_content import process_content
-from libs.processing.store_results import store_results
+from libs.processing.store_results import store_results, store_results_csv
 from libs.services.call_services import call_services
 from libs.statistics import compute_success_ratio
 from libs.visualise_regions import annotate_pdfs
@@ -72,7 +72,7 @@ def process_logsheet(logsheet, template, config_file, credentials, debug=False, 
 
 
 def main(scanned_logsheet, template, config_file, output_file, google_credentials, amazon_credentials, azure_credentials, 
-         debug, backside, backside_template, backside_config, ugly_checkboxes, aligned, filter_grayscale):
+         debug, backside, backside_template, backside_config, ugly_checkboxes, aligned, filter_grayscale, store_csv=False):
     
     checkbox_edges = 0.2
     if ugly_checkboxes:
@@ -85,7 +85,7 @@ def main(scanned_logsheet, template, config_file, output_file, google_credential
 
     if contents is None:
         sys.exit('Error: unable to process the front page of the logsheet. Please check the input files and parameters.')
-        
+
     # extract contents from the back side (if present)
     if backside:
         try:
@@ -103,8 +103,11 @@ def main(scanned_logsheet, template, config_file, output_file, google_credential
 
     ratio = compute_success_ratio(contents, artefacts)
 
-    # store to Excel sheet
-    store_results(contents, artefacts, output_file)
+    if not store_csv:
+        # store to Excel sheet
+        store_results(contents, artefacts, output_file)
+    else:
+        store_results_csv(contents, artefacts, output_file)
     return ratio
 
 
@@ -132,6 +135,7 @@ if __name__ == '__main__':
     optional.add_argument('--ugly_checkboxes', action=argparse.BooleanOptionalAction, default=False, help='Checkboxes in the logsheet have irregular shape or large edges.')
     optional.add_argument('--aligned', action=argparse.BooleanOptionalAction, default=False, help='The scanned image is already aligned with template, skip automatic alignment step.')
     optional.add_argument('--filter_grayscale', action=argparse.BooleanOptionalAction, default=False, help='During the alignment step, keep only the darkest pixels in grayscale.')
+    optional.add_argument('--store_csv', action=argparse.BooleanOptionalAction, default=False, help='Store output as a CSV instead of XLSX.')
 
     args = args_parser.parse_args()
 
@@ -142,4 +146,4 @@ if __name__ == '__main__':
         args_parser.error('The --backside argument requires --backside_template and --backside_config.')
 
     main(args.pdf_logsheet, args.pdf_template, args.config_file, args.output_file, args.google, args.amazon, args.azure, 
-         args.debug, args.backside, args.backside_template, args.backside_config, args.ugly_checkboxes, args.aligned, args.filter_grayscale)
+         args.debug, args.backside, args.backside_template, args.backside_config, args.ugly_checkboxes, args.aligned, args.filter_grayscale, args.store_csv)

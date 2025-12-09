@@ -1,7 +1,9 @@
+import csv
 import os
+from shutil import rmtree
+
 import cv2
 import xlsxwriter
-from shutil import rmtree
 
 
 def order_results(values):
@@ -118,3 +120,43 @@ def store_results(results, artefacts, output_file, include_validation=False):
 
     workbook.close()
     rmtree(images_directory)
+
+def store_results_csv(results, artefacts, output_file):
+    """
+    Write identified results into a CSV file.
+    
+    Args:
+        results (list): identified results
+        artefacts (dict): identified artefacts per service 
+        output_file (str): path to the output csv file
+    """
+    with open(output_file, mode='w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+
+        writer.writerow(['varname', 'inferred value']) 
+
+        for result in results:
+            row_id = result[0]
+            data_dict = result[1]
+            
+            values = order_results(data_dict) 
+            
+            inferred = data_dict.get('inferred', None)
+            if inferred is None and len(values) != 0:
+                inferred = values[0]
+
+            writer.writerow([row_id, inferred])
+
+        # if artefacts:
+        #     writer.writerow([])
+        #     writer.writerow(['--- Extra artefacts ---'])
+        #     writer.writerow(['service', 'artefact name'])
+
+        #     for key, items in artefacts.items():
+        #         if items:
+        #             writer.writerow([key, '']) 
+                    
+        #             for extra in items:
+        #                 if extra[1].size != 0:
+        #                     writer.writerow(['', extra[0]])
+        #                     writer.writerow(['', extra[0]])
