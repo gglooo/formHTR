@@ -1,5 +1,7 @@
 import argparse
 import json
+import os
+import sys
 
 import numpy as np
 from libs.logsheet_config import LogsheetConfig
@@ -81,27 +83,30 @@ def main(scanned_logsheet, template, config_file, output_file, google_credential
     # extract contents from the front page
     contents, artefacts = process_logsheet(scanned_logsheet, template, config_file, credentials, debug=debug, checkbox_edges=checkbox_edges, skip_alignment=aligned, filter_grayscale=filter_grayscale)
 
-    if contents is not None:
-        # extract contents from the back side (if present)
-        if backside:
-            try:
-                contents_back, artefacts_back = process_logsheet(scanned_logsheet, backside_template, backside_config, credentials,
-                                                                debug=debug, checkbox_edges=checkbox_edges, front=False, skip_alignment=aligned)
-                
-                if contents_back is not None:
-                    # join results
-                    contents += contents_back
-                    for key in artefacts.keys():
-                        artefacts[key] = artefacts[key] + artefacts_back[key]
-            except ValueError:
-                # probably backside is present, but it is actually a blank page
-                pass
+    if contents is None:
+        sys.exit('Error: unable to process the front page of the logsheet. Please check the input files and parameters.')
+        
+    # extract contents from the back side (if present)
+    if backside:
+        try:
+            contents_back, artefacts_back = process_logsheet(scanned_logsheet, backside_template, backside_config, credentials,
+                                                            debug=debug, checkbox_edges=checkbox_edges, front=False, skip_alignment=aligned)
+            
+            if contents_back is not None:
+                # join results
+                contents += contents_back
+                for key in artefacts.keys():
+                    artefacts[key] = artefacts[key] + artefacts_back[key]
+        except ValueError:
+            # probably backside is present, but it is actually a blank page
+            pass
 
-        ratio = compute_success_ratio(contents, artefacts)
+    ratio = compute_success_ratio(contents, artefacts)
 
-        # store to Excel sheet
-        store_results(contents, artefacts, output_file)
-        return ratio
+    # store to Excel sheet
+    store_results(contents, artefacts, output_file)
+    return ratio
+
 
 
 if __name__ == '__main__':
