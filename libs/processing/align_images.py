@@ -108,15 +108,8 @@ def format_point(point):
 def get_alignment_data(scanned, template):
     template_corners, _ = find_corners(template, False)
     scanned_corners, _ = find_corners(scanned, False)
-
    
-    height, width, _ = template.shape
-    
     return {
-        "referenceDimensions": {
-            "width": int(width),
-            "height": int(height)
-        },
         "templatePoints": [format_point(p) for p in template_corners],
         "targetPoints": [format_point(p) for p in scanned_corners]
     }

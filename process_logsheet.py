@@ -3,6 +3,7 @@ import json
 import os
 import sys
 
+import cv2
 import numpy as np
 from libs.logsheet_config import LogsheetConfig
 from libs.pdf_to_image import (convert_pdf_to_image, get_image_size,
@@ -13,6 +14,7 @@ from libs.processing.store_results import store_results, store_results_csv
 from libs.services.call_services import call_services
 from libs.statistics import compute_success_ratio
 from libs.visualise_regions import annotate_pdfs
+from manual_align import process
 
 
 def load_credentials(google_credentials, amazon_credentials, azure_credentials):
@@ -27,7 +29,7 @@ def load_credentials(google_credentials, amazon_credentials, azure_credentials):
     return {'google': google_credentials, 'amazon': amazon_credentials, 'azure': azure_credentials}
 
 
-def preprocess_input(scanned_logsheet, template, config, page, skip_alignment, filter_grayscale, max_size=4, dpi=300):
+def preprocess_input(scanned_logsheet, template, config, page, skip_alignment, filter_grayscale, max_size=4, dpi=300, alignment_config=None):
     # convert pdfs to images
     template_image = convert_pdf_to_image(template, dpi=dpi)
     template_image = np.array(template_image)
@@ -40,16 +42,23 @@ def preprocess_input(scanned_logsheet, template, config, page, skip_alignment, f
     template_image = resize_image(template_image, (config.width, config.height))
 
     # fix logsheet_image (reorient and scale)
-    if not skip_alignment:
+    if not skip_alignment and alignment_config is None:
         logsheet_image = align_images(logsheet_image, template_image, filter_grayscale)
+    elif not skip_alignment and alignment_config is not None:
+        with open(alignment_config, 'r') as f:
+            align_config = json.load(f)
 
+        template_points = align_config['template_points']
+        target_points = align_config['target_points']
+        logsheet_image = process(logsheet_image, template_image, template_points=template_points, target_points=target_points)
+        
     if logsheet_image is not None:
         if get_image_size(logsheet_image) > max_size * 2**20:
-            logsheet_image = preprocess_input(scanned_logsheet, template, config, page, skip_alignment, filter_grayscale, max_size, dpi=dpi-50)
+            logsheet_image = preprocess_input(scanned_logsheet, template, config, page, skip_alignment, filter_grayscale, max_size, dpi=dpi-50, alignment_config=alignment_config)
         return logsheet_image
 
 
-def process_logsheet(logsheet, template, config_file, credentials, debug=False, front=True, checkbox_edges=0.2, skip_alignment=False, filter_grayscale=False):
+def process_logsheet(logsheet, template, config_file, credentials, debug=False, front=True, checkbox_edges=0.2, skip_alignment=False, filter_grayscale=False, alignment_config=None):
     # load CSV config
     config = LogsheetConfig([], [])
     config.import_from_json(config_file)
@@ -57,7 +66,7 @@ def process_logsheet(logsheet, template, config_file, credentials, debug=False, 
     page = 0 if front else 1
 
     # assume PDF and CSV config correspond to each other (QR codes are not reliable anyway)
-    logsheet_image = preprocess_input(logsheet, template, config, page, skip_alignment, filter_grayscale)
+    logsheet_image = preprocess_input(logsheet, template, config, page, skip_alignment, filter_grayscale, alignment_config=alignment_config)
     if logsheet_image is not None:
     # call external OCR services
         identified_content = call_services(logsheet_image, credentials, config)
@@ -72,7 +81,7 @@ def process_logsheet(logsheet, template, config_file, credentials, debug=False, 
 
 
 def main(scanned_logsheet, template, config_file, output_file, google_credentials, amazon_credentials, azure_credentials, 
-         debug, backside, backside_template, backside_config, ugly_checkboxes, aligned, filter_grayscale, store_csv=False):
+         debug, backside, backside_template, backside_config, ugly_checkboxes, aligned, filter_grayscale, store_csv=False, alignment_config=None):
     
     checkbox_edges = 0.2
     if ugly_checkboxes:
@@ -81,7 +90,7 @@ def main(scanned_logsheet, template, config_file, output_file, google_credential
     credentials = load_credentials(google_credentials, amazon_credentials, azure_credentials)
     
     # extract contents from the front page
-    contents, artefacts = process_logsheet(scanned_logsheet, template, config_file, credentials, debug=debug, checkbox_edges=checkbox_edges, skip_alignment=aligned, filter_grayscale=filter_grayscale)
+    contents, artefacts = process_logsheet(scanned_logsheet, template, config_file, credentials, debug=debug, checkbox_edges=checkbox_edges, skip_alignment=aligned, filter_grayscale=filter_grayscale, alignment_config=alignment_config)
 
     if contents is None:
         sys.exit('Error: unable to process the front page of the logsheet. Please check the input files and parameters.')
@@ -134,6 +143,7 @@ if __name__ == '__main__':
     optional.add_argument('--backside_config', type=str, help='Path to JSON file containing config of the backside')
     optional.add_argument('--ugly_checkboxes', action=argparse.BooleanOptionalAction, default=False, help='Checkboxes in the logsheet have irregular shape or large edges.')
     optional.add_argument('--aligned', action=argparse.BooleanOptionalAction, default=False, help='The scanned image is already aligned with template, skip automatic alignment step.')
+    optional.add_argument('--alignment_config', type=str, required=False, help='Path to JSON file containing alignment config.')
     optional.add_argument('--filter_grayscale', action=argparse.BooleanOptionalAction, default=False, help='During the alignment step, keep only the darkest pixels in grayscale.')
     optional.add_argument('--store_csv', action=argparse.BooleanOptionalAction, default=False, help='Store output as a CSV instead of XLSX.')
 
@@ -146,4 +156,4 @@ if __name__ == '__main__':
         args_parser.error('The --backside argument requires --backside_template and --backside_config.')
 
     main(args.pdf_logsheet, args.pdf_template, args.config_file, args.output_file, args.google, args.amazon, args.azure, 
-         args.debug, args.backside, args.backside_template, args.backside_config, args.ugly_checkboxes, args.aligned, args.filter_grayscale, args.store_csv)
+         args.debug, args.backside, args.backside_template, args.backside_config, args.ugly_checkboxes, args.aligned, args.filter_grayscale, args.store_csv, args.alignment_config)

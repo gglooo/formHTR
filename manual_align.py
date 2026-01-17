@@ -1,13 +1,13 @@
-import cv2
-import numpy as np
 import argparse
-from PyPDF2 import PdfReader, PdfWriter
-import img2pdf
-from PIL import Image
 import io
 
+import cv2
+import img2pdf
+import numpy as np
 from libs.pdf_to_image import convert_pdf_to_image, resize_image
 from libs.processing.align_images import compute_closest_point, transform
+from PIL import Image
+from PyPDF2 import PdfReader, PdfWriter
 
 
 def select_points(image, window_name):
@@ -48,7 +48,7 @@ def to_pdf(image):
     return img2pdf.convert(image_bytes.getvalue())
 
 
-def process(target, template, backside=False):
+def process(target, template, backside=False, template_points=None, target_points=None):
     height, width, _ = target.shape
 
     target = resize_image(target, (width, height))
@@ -56,7 +56,7 @@ def process(target, template, backside=False):
 
     # Display and select points on the template image
     window_name = 'TEMPLATE' + '(backside)' if backside else 'TEMPLATE'
-    template_points = select_points(template.copy(), window_name)
+    template_points = template_points if template_points is not None else select_points(template.copy(), window_name)
     # template_points = [(29, 233), (2218, 236), (30, 3074), (2213, 3084)]
 
     # sort by finding closest points to corners
@@ -67,7 +67,7 @@ def process(target, template, backside=False):
 
     # Display and select points on the target image
     window_name =  'SCAN' + '(backside)' if backside else 'SCAN'
-    target_points = select_points(target.copy(), window_name)
+    target_points = target_points if target_points is not None else select_points(target.copy(), window_name)
     # target_points = [(149, 322), (2435, 338), (107, 3270), (2396, 3306)]
 
     target_points = [compute_closest_point((0, 0), target_points),
