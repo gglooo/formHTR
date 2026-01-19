@@ -5,6 +5,7 @@ import numpy as np
 from libs.pdf_to_image import convert_pdf_to_image, resize_image
 from libs.processing.align_images import align_images
 from libs.processing.store_results import store_results
+from manual_align import process as manual_align_process
 
 
 class ExportEntry:
@@ -45,7 +46,7 @@ class ExportConfig:
         )
 
 
-def main(pdf_logsheet, pdf_template, config_file, output_file):
+def main(pdf_logsheet, pdf_template, config_file, output_file, aligned=False, alignment_config=None):
     config = ExportConfig.load_from_json(config_file)
 
     template_image = convert_pdf_to_image(pdf_template)
@@ -61,7 +62,19 @@ def main(pdf_logsheet, pdf_template, config_file, output_file):
     else:
         pass
     
-    aligned_logsheet = align_images(logsheet_image, template_image, filter_grayscale=False)
+    if alignment_config is not None and not aligned:
+        with open(alignment_config, 'r') as f:
+            align_config = json.load(f)
+
+        template_points = align_config['template_points']
+        target_points = align_config['target_points']
+    
+        aligned_logsheet = manual_align_process(logsheet_image, template_image, 
+                                                template_points=template_points, 
+                                                target_points=target_points)
+    else:
+        print("Warning: Missing alignment points, falling back to automatic alignment.")
+        aligned_logsheet = align_images(logsheet_image, template_image, filter_grayscale=False)
     
     if aligned_logsheet is None:
         print("Warning: Alignment failed. Using original image.")
@@ -93,7 +106,10 @@ if __name__ == '__main__':
     parser.add_argument('--pdf_template', required=True, help='Path to template PDF')
     parser.add_argument('--config_file', required=True, help='Path to JSON payload (data + dims)')
     parser.add_argument('--output_file', required=True, help='Path to output XLSX')
+
+    parser.add_argument('--aligned', action=argparse.BooleanOptionalAction, default=False, help='The scanned image is already aligned with template, skip automatic alignment step.')
+    parser.add_argument('--alignment_config', type=str, required=False, help='Path to JSON file containing alignment config.')
     
     args = parser.parse_args()
     
-    main(args.pdf_logsheet, args.pdf_template, args.config_file, args.output_file)
+    main(args.pdf_logsheet, args.pdf_template, args.config_file, args.output_file, aligned=args.aligned, alignment_config=args.alignment_config)
