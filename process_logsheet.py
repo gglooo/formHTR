@@ -81,7 +81,7 @@ def process_logsheet(logsheet, template, config_file, credentials, debug=False, 
 
 
 def main(scanned_logsheet, template, config_file, output_file, google_credentials, amazon_credentials, azure_credentials, 
-         debug, backside, backside_template, backside_config, ugly_checkboxes, aligned, filter_grayscale, store_csv=False, alignment_config=None):
+         debug, backside, backside_template, backside_config, ugly_checkboxes, aligned, filter_grayscale, store_csv=False, alignment_config=None, backside_alignment_config=None):
     
     checkbox_edges = 0.2
     if ugly_checkboxes:
@@ -99,7 +99,7 @@ def main(scanned_logsheet, template, config_file, output_file, google_credential
     if backside:
         try:
             contents_back, artefacts_back = process_logsheet(scanned_logsheet, backside_template, backside_config, credentials,
-                                                            debug=debug, checkbox_edges=checkbox_edges, front=False, skip_alignment=aligned)
+                                                            debug=debug, checkbox_edges=checkbox_edges, front=False, skip_alignment=aligned, filter_grayscale=filter_grayscale, alignment_config=backside_alignment_config)
             
             if contents_back is not None:
                 # join results
@@ -144,6 +144,7 @@ if __name__ == '__main__':
     optional.add_argument('--ugly_checkboxes', action=argparse.BooleanOptionalAction, default=False, help='Checkboxes in the logsheet have irregular shape or large edges.')
     optional.add_argument('--aligned', action=argparse.BooleanOptionalAction, default=False, help='The scanned image is already aligned with template, skip automatic alignment step.')
     optional.add_argument('--alignment_config', type=str, required=False, help='Path to JSON file containing alignment config.')
+    optional.add_argument('--backside_alignment_config', type=str, required=False, help='Path to JSON file containing backside alignment config.')
     optional.add_argument('--filter_grayscale', action=argparse.BooleanOptionalAction, default=False, help='During the alignment step, keep only the darkest pixels in grayscale.')
     optional.add_argument('--store_csv', action=argparse.BooleanOptionalAction, default=False, help='Store output as a CSV instead of XLSX.')
 
@@ -156,4 +157,4 @@ if __name__ == '__main__':
         args_parser.error('The --backside argument requires --backside_template and --backside_config.')
 
     main(args.pdf_logsheet, args.pdf_template, args.config_file, args.output_file, args.google, args.amazon, args.azure, 
-         args.debug, args.backside, args.backside_template, args.backside_config, args.ugly_checkboxes, args.aligned, args.filter_grayscale, args.store_csv, args.alignment_config)
+         args.debug, args.backside, args.backside_template, args.backside_config, args.ugly_checkboxes, args.aligned, args.filter_grayscale, args.store_csv, args.alignment_config, args.backside_alignment_config)
