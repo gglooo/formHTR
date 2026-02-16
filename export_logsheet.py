@@ -9,7 +9,7 @@ from manual_align import process as manual_align_process
 
 
 class ExportEntry:
-    def __init__(self, varname, content, coordinates):
+    def __init__(self, varname, content, coordinates, page=0):
         self.varname = varname if varname else 'Unknown'
         self.content = content if content else ''
         self.coordinates = coordinates if coordinates else {}
@@ -18,6 +18,7 @@ class ExportEntry:
         self.y = self.coordinates.get('y', 0)
         self.width = self.coordinates.get('width', 0)
         self.height = self.coordinates.get('height', 0)
+        self.page = page
 
 
 class ExportConfig:
@@ -36,7 +37,8 @@ class ExportConfig:
             entries.append(ExportEntry(
                 item.get('varname'), 
                 item.get('content'), 
-                item.get('coordinates')
+                item.get('coordinates'),
+                item.get('page', 0)
             ))
             
         return cls(
@@ -46,22 +48,7 @@ class ExportConfig:
         )
 
 
-def main(pdf_logsheet, pdf_template, config_file, output_file, aligned=False, alignment_config=None):
-    config = ExportConfig.load_from_json(config_file)
-
-    template_image = convert_pdf_to_image(pdf_template)
-    template_image = np.array(template_image)
-
-    logsheet_image = convert_pdf_to_image(pdf_logsheet)
-    logsheet_image = np.array(logsheet_image)
-    
-    if config.width and config.height:
-        target_size = (config.width, config.height)
-        template_image = resize_image(template_image, target_size)
-        logsheet_image = resize_image(logsheet_image, target_size)
-    else:
-        pass
-    
+def process_side(logsheet_image, template_image, aligned=False, alignment_config=None):
     if alignment_config is not None and not aligned:
         with open(alignment_config, 'r') as f:
             align_config = json.load(f)
@@ -80,18 +67,62 @@ def main(pdf_logsheet, pdf_template, config_file, output_file, aligned=False, al
         print("Warning: Alignment failed. Using original image.")
         aligned_logsheet = logsheet_image
 
+    return aligned_logsheet
+
+
+def main(pdf_logsheet, pdf_template, config_file, output_file, aligned=False, alignment_config=None, backside=False, backside_template=None, backside_alignment_config=None):
+    config = ExportConfig.load_from_json(config_file)
+
+    # Front side
+    template_image = convert_pdf_to_image(pdf_template)
+    template_image = np.array(template_image)
+
+    logsheet_image = convert_pdf_to_image(pdf_logsheet, page=0)
+    logsheet_image = np.array(logsheet_image)
+    
+    if config.width and config.height:
+        target_size = (config.width, config.height)
+        template_image = resize_image(template_image, target_size)
+        logsheet_image = resize_image(logsheet_image, target_size)
+    
+    aligned_logsheet_front = process_side(logsheet_image, template_image, aligned, alignment_config)
+
+    # Back side
+    aligned_logsheet_back = None
+    if backside and backside_template:
+        backside_template_image = convert_pdf_to_image(backside_template)
+        backside_template_image = np.array(backside_template_image)
+
+        logsheet_image_back = convert_pdf_to_image(pdf_logsheet, page=1)
+        logsheet_image_back = np.array(logsheet_image_back)
+
+        if config.width and config.height:
+            target_size = (config.width, config.height)
+            backside_template_image = resize_image(backside_template_image, target_size)
+            logsheet_image_back = resize_image(logsheet_image_back, target_size)
+
+        aligned_logsheet_back = process_side(logsheet_image_back, backside_template_image, aligned, backside_alignment_config)
+
+
     results = []
     
-    img_h, img_w, _ = aligned_logsheet.shape
-
     for entry in config.entries:
+        if entry.page == 0:
+            current_logsheet = aligned_logsheet_front
+        elif entry.page == 1 and aligned_logsheet_back is not None:
+            current_logsheet = aligned_logsheet_back
+        else:
+            continue
+
+        img_h, img_w, _ = current_logsheet.shape
+
         y_start = max(0, entry.y)
         y_end = min(img_h, entry.y + entry.height)
         x_start = max(0, entry.x)
         x_end = min(img_w, entry.x + entry.width)
         
         if entry.width > 0 and entry.height > 0:
-            cropped = aligned_logsheet[y_start:y_end, x_start:x_end]
+            cropped = current_logsheet[y_start:y_end, x_start:x_end]
         else:
             cropped = np.zeros((10, 10, 3), dtype=np.uint8)
 
@@ -110,6 +141,12 @@ if __name__ == '__main__':
     parser.add_argument('--aligned', action=argparse.BooleanOptionalAction, default=False, help='The scanned image is already aligned with template, skip automatic alignment step.')
     parser.add_argument('--alignment_config', type=str, required=False, help='Path to JSON file containing alignment config.')
     
+    parser.add_argument('--backside', action=argparse.BooleanOptionalAction, default=False, help='Backside page present.')
+    parser.add_argument('--backside_template', type=str, help='PDF template of the backside')
+    parser.add_argument('--backside_config', type=str, required=False, help='Path to JSON file containing backside config.')
+    parser.add_argument('--backside_alignment_config', type=str, required=False, help='Path to JSON file containing backside alignment config.')
+    
     args = parser.parse_args()
     
-    main(args.pdf_logsheet, args.pdf_template, args.config_file, args.output_file, aligned=args.aligned, alignment_config=args.alignment_config)
+    main(args.pdf_logsheet, args.pdf_template, args.config_file, args.output_file, aligned=args.aligned, alignment_config=args.alignment_config,
+         backside=args.backside, backside_template=args.backside_template, backside_alignment_config=args.backside_alignment_config)
