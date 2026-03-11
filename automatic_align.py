@@ -29,6 +29,10 @@ def automatic_align(scanned_logsheet, template, page=0):
     (logsheet_image, template_image) = preprocess_input(scanned_logsheet, template, page)
     alignment_data = get_alignment_data(logsheet_image, template_image)
 
+    height, width, _ = logsheet_image.shape
+    alignment_data['imageWidth'] = width
+    alignment_data['imageHeight'] = height
+
     return alignment_data
     
 
