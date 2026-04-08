@@ -44,7 +44,7 @@ This functionality is split (for now) into two separate scripts.
 
 #### select ROIs
 
-Script `select_ROIs.py` is used to find and define locations of regions of interest (ROIs) in the given PDF.
+Find and define locations of regions of interest (ROIs) in the given PDF.
 
 Generally, it is possible to draw ROIs (rectangles) manually but also to detect them automatically.
 The coordinates of ROIs are stored in a JSON file.
@@ -60,7 +60,7 @@ Run `formhtr select-rois -h` for details.
 
 #### annotate ROIs
 
-Script `annotate_ROIs.py` is used to specify the type of content for each rectangle.
+Specify the type of content for each rectangle.
 
 The workflow is designed in a way that you can navigate over specified ROIs and assign them the expected type of their content.
 This is done by pressing appropriate control commands.
@@ -79,7 +79,7 @@ Run `formhtr annotate-rois -h` for details.
 
 ### process logsheet
 
-Script `process_logsheet.py` is used to extract values from specified ROIs.
+Extract values from specified ROIs.
 
 This is the crucial step that applies various techniques to extract the information as precisely as possible.
 It can process one logsheet at a time, given the template and config files.
@@ -126,11 +126,3 @@ __Microsoft__
     "ENDPOINT": "https://ENDPOINT"
 }
 ```
-
----
-
-## Testing
-
-It is possible to test logsheet processing using dry run without credentials on data stored in `tests/`.
-
-Run `python dry_processing.py -h` for details.
