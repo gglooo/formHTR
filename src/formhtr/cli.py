@@ -4,6 +4,7 @@ import argparse
 import sys
 
 from . import __version__
+from .deps import check_system_dependencies, ensure_system_dependencies
 from .logsheet import load_credentials, process_logsheet_to_xlsx
 from .manual_align import manual_align_pdf
 from .roi_tools import annotate_rois, select_rois
@@ -69,6 +70,8 @@ def _build_parser() -> argparse.ArgumentParser:
     p_annot.add_argument("--remove-unannotated", action=argparse.BooleanOptionalAction, default=False)
     p_annot.add_argument("--display-residuals", action=argparse.BooleanOptionalAction, default=False)
 
+    sub.add_parser("doctor", help="Check required system dependencies")
+
     return parser
 
 
@@ -77,6 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "process-logsheet":
+        ensure_system_dependencies({"zbar"})
         if args.backside and (not args.backside_template or not args.backside_config):
             parser.error("--backside requires --backside-template and --backside-config.")
 
@@ -105,6 +109,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "manual-align":
+        ensure_system_dependencies({"qpdf"})
         manual_align_pdf(
             template_pdf=args.pdf_template,
             scanned_logsheet_pdf=args.pdf_logsheet,
@@ -137,6 +142,17 @@ def main(argv: list[str] | None = None) -> int:
             display_residuals=args.display_residuals,
         )
         return 0
+
+    if args.command == "doctor":
+        missing = check_system_dependencies()
+        if not missing:
+            print("All required system dependencies are available: qpdf, zbar.")
+            return 0
+
+        print("Missing system dependencies:")
+        for name, hint in missing:
+            print(f"- {name}: {hint}")
+        return 1
 
     parser.error(f"Unknown command: {args.command}")
     return 2
