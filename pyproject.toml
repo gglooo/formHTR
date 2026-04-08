@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "formhtr"
+version = "0.1.0"
+description = "Handprint text recognition in form documents."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "Matej Trojak", email = "matej.trojak@embl.de" }
+]
+keywords = ["ocr", "forms", "computer-vision"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "numpy",
+  "opencv-python",
+  "pillow==9.5.0",
+  "pdf2image",
+  "pandas",
+  "xlsxwriter",
+  "imutils",
+  "zxing-cpp",
+  "google-cloud-vision",
+  "rtree",
+  "boto3",
+  "azure-cognitiveservices-vision-computervision",
+  "pyzbar",
+  "biopython",
+  "scikit-image",
+  "img2pdf",
+  "PyPDF2",
+]
+
+[project.urls]
+Repository = "https://github.com/grp-bork/formHTR"
+
+[project.scripts]
+formhtr = "formhtr.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

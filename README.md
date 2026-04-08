@@ -1,25 +1,73 @@
 # formHTR
 Handprint text recognition in form documents.
 
+[![PyPI version](https://img.shields.io/pypi/v/formhtr.svg)](https://pypi.org/project/formhtr/)
+
 ![Trec](https://github.com/grp-bork/formHTR/assets/15349569/c0789616-80d0-43c8-8693-d3d9f070511c)
 
-# Installation
+## Installation
+
+### pip
+
+```bash
+pip install formhtr
+```
+
+The tool also requires the `zbar` shared library installed (used by `pyzbar`).
+For PDF-related tooling, `qpdf` is also required.
+
+System dependencies:
+
+- macOS (Homebrew): `brew install zbar qpdf`
+- Debian/Ubuntu: `sudo apt-get install libzbar0 qpdf`
+- Fedora: `sudo dnf install zbar qpdf`
+
+You can verify runtime requirements with:
+
+```bash
+formhtr doctor
+```
+
+### conda (dev)
 
 ```
 conda env create -f conda_env.yaml
 ```
 
-The tool also requires [zbar](https://github.com/NaturalHistoryMuseum/pyzbar/issues/37) shared library installed.
+## Usage
 
-# Usage
+Run `formhtr --help` for full CLI help.
 
-## Create ROIs
+### Quickstart
+
+```bash
+# 1) Verify system dependencies
+formhtr doctor
+
+# 2) Create ROI config for a template
+formhtr select-rois --pdf-file template.pdf --output-file config.json
+
+# 3) Optionally annotate ROI types and variable names
+formhtr annotate-rois --pdf-file template.pdf --config-file config.json --output-file config_annotated.json
+
+# 4) Process a scanned logsheet into XLSX
+formhtr process-logsheet \
+  --pdf-logsheet scan.pdf \
+  --pdf-template template.pdf \
+  --config-file config_annotated.json \
+  --output-file output.xlsx \
+  --google google_credentials.json \
+  --amazon amazon_credentials.json \
+  --azure azure_credentials.json
+```
+
+### Create ROIs
 
 This functionality is split (for now) into two separate scripts.
 
-### select ROIs
+#### select ROIs
 
-Script `select_ROIs.py` is used to find and define locations of regions of interest (ROIs) in the given PDF.
+Find and define locations of regions of interest (ROIs) in the given PDF.
 
 Generally, it is possible to draw ROIs (rectangles) manually but also to detect them automatically.
 The coordinates of ROIs are stored in a JSON file.
@@ -31,11 +79,11 @@ The tool is supposed to be run from the command line, as the control commands ar
 * Press `q` or `Esc` to exit editing and save the config file.
 * Press `r` to remove the last rectangle.
 
-Run `python select_ROIs.py -h` for details.
+Run `formhtr select-rois -h` for details.
 
-### annotate ROIS
+#### annotate ROIs
 
-Script `annotate_ROIs.py` is used to specify the type of content for each rectangle.
+Specify the type of content for each rectangle.
 
 The workflow is designed in a way that you can navigate over specified ROIs and assign them the expected type of their content.
 This is done by pressing appropriate control commands.
@@ -50,16 +98,16 @@ This is done by pressing appropriate control commands.
 * Press `v` to enter the variable name.
 * Press an arrow to navigate through ROIs (only left and right for now).
 
-Run `python select_ROIs.py -h` for details.
+Run `formhtr annotate-rois -h` for details.
 
 ### process logsheet
 
-Script `process_logsheet.py` is used to extract values from specified ROIs.
+Extract values from specified ROIs.
 
 This is the crucial step that applies various techniques to extract the information as precisely as possible.
 It can process one logsheet at a time, given the template and config files.
 
-Run `python select_ROIs.py -h` for details.
+Run `formhtr process-logsheet -h` for details.
 
 #### Credentials
 
@@ -101,11 +149,3 @@ __Microsoft__
     "ENDPOINT": "https://ENDPOINT"
 }
 ```
-
----
-
-## Testing
-
-It is possible to test logsheet processing using dry run without credentials on data stored in `tests/`.
-
-Run `python dry_processing.py -h` for details.
