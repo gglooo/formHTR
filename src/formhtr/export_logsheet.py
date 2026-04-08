@@ -29,7 +29,7 @@ class ExportConfig:
     entries: list[ExportEntry]
 
 
-def _entry_from_legacy(item: dict, force_page: int | None = None) -> ExportEntry:
+def _entry_from_data(item: dict, force_page: int | None = None) -> ExportEntry:
     coordinates = item.get("coordinates") or {}
     page = force_page if force_page is not None else int(item.get("page", 0))
 
@@ -44,7 +44,7 @@ def _entry_from_legacy(item: dict, force_page: int | None = None) -> ExportEntry
     )
 
 
-def _entry_from_current(item: dict, force_page: int | None = None) -> ExportEntry:
+def _entry_from_content(item: dict, force_page: int | None = None) -> ExportEntry:
     coords = item.get("coords") or [0, 0, 0, 0]
     start_x, start_y, end_x, end_y = [int(v) for v in coords]
     page = 0 if force_page is None else force_page
@@ -68,10 +68,10 @@ def _load_config_file(config_file: str, *, force_page: int | None = None) -> Exp
 
     if "data" in payload:
         for item in payload.get("data", []):
-            entries.append(_entry_from_legacy(item, force_page=force_page))
+            entries.append(_entry_from_data(item, force_page=force_page))
     elif "content" in payload:
         for item in payload.get("content", []):
-            entries.append(_entry_from_current(item, force_page=force_page))
+            entries.append(_entry_from_content(item, force_page=force_page))
     else:
         raise ValueError(
             "Unsupported config format. Expected either legacy 'data' or current 'content'.")
