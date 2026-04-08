@@ -1,8 +1,8 @@
 from google.cloud import vision_v1
 from google.oauth2 import service_account
 
-from libs.region import Rectangle
-from libs.services.utils import extract_corners
+from ..region import Rectangle
+from .utils import extract_corners
 
 
 class GoogleVision:

@@ -1,9 +1,9 @@
 from PIL import Image
 import io
 
-from libs.services.amazon_vision import AmazonVision
-from libs.services.azure_vision import AzureVision
-from libs.services.google_vision import GoogleVision
+from .amazon_vision import AmazonVision
+from .azure_vision import AzureVision
+from .google_vision import GoogleVision
 
 
 def call_services(logsheet_image, credentials, config):

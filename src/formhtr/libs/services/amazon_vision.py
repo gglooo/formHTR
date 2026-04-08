@@ -1,6 +1,6 @@
 import boto3
 
-from libs.region import Rectangle
+from ..region import Rectangle
 
 
 class AmazonVision:

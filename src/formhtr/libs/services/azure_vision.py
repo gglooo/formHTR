@@ -4,8 +4,8 @@ from azure.cognitiveservices.vision.computervision.models import OperationStatus
 from azure.cognitiveservices.vision.computervision.models._models_py3 import ComputerVisionOcrErrorException
 import time
 
-from libs.region import Rectangle
-from libs.services.utils import extract_corners
+from ..region import Rectangle
+from .utils import extract_corners
 
 
 class AzureVision:

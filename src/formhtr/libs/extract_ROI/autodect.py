@@ -5,7 +5,7 @@ from skimage import filters, measure, morphology
 from skimage.filters import threshold_triangle
 from skimage.color import rgb2gray
 
-from libs.services.google_vision import GoogleVision
+from ..services.google_vision import GoogleVision
 
 
 def extract_framebox(image):

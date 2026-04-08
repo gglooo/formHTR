@@ -1,7 +1,7 @@
-from libs.processing.rtree import Ensemble
-from libs.processing.barcode import read_barcode
-from libs.processing.process_area import general_text_area
-from libs.processing.checkbox import is_ticked
+from .rtree import Ensemble
+from .barcode import read_barcode
+from .process_area import general_text_area
+from .checkbox import is_ticked
 
 
 def process_content(indetified_content, logsheet_image, config, checkbox_edges):

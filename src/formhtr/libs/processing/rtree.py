@@ -1,5 +1,5 @@
 from rtree import index
-from libs.region import Rectangle
+from ..region import Rectangle
 
 
 class Ensemble:

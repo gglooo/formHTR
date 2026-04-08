@@ -1,7 +1,7 @@
 import json
 
-from libs.region import ROI, Residual
-from libs.annotate_ROI.utils import is_approximately_square
+from .region import ROI, Residual
+from .annotate_ROI.utils import is_approximately_square
 
 
 ROI_TYPES = {'h': 'Handwritten',
