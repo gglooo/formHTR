@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
             filter_grayscale=args.filter_grayscale,
         )
         if ratio is not None:
-            print(f"Success ratio: {ratio:.3f}")
+            print(f"Success ratio: {ratio['ratio']:.3f}")
         return 0
 
     if args.command == "manual-align":
