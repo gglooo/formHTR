@@ -1,6 +1,8 @@
 # formHTR
 Handprint text recognition in form documents.
 
+[![PyPI version](https://img.shields.io/pypi/v/formhtr.svg)](https://pypi.org/project/formhtr/)
+
 ![Trec](https://github.com/grp-bork/formHTR/assets/15349569/c0789616-80d0-43c8-8693-d3d9f070511c)
 
 ## Installation
