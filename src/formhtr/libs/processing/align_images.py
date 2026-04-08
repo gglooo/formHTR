@@ -59,7 +59,7 @@ def find_corners(image, filter_grayscale, num=10, gray_filter=20):
     for contour in contours:
         rect = cv2.minAreaRect(contour)
         bounding_box = cv2.boxPoints(rect)
-        box_points += list(np.int0(bounding_box))
+        box_points += [tuple(point) for point in bounding_box.astype(int)]
 
     copy_image = image.copy()
     for corner in box_points:
