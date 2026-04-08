@@ -10,12 +10,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
-  "Matej Trojak <matej.trojak@embl.de>"
+  { name = "Matej Trojak", email = "matej.trojak@embl.de" }
 ]
 keywords = ["ocr", "forms", "computer-vision"]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
 dependencies = [

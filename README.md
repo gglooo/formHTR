@@ -38,6 +38,29 @@ conda env create -f conda_env.yaml
 
 Run `formhtr --help` for full CLI help.
 
+### Quickstart
+
+```bash
+# 1) Verify system dependencies
+formhtr doctor
+
+# 2) Create ROI config for a template
+formhtr select-rois --pdf-file template.pdf --output-file config.json
+
+# 3) Optionally annotate ROI types and variable names
+formhtr annotate-rois --pdf-file template.pdf --config-file config.json --output-file config_annotated.json
+
+# 4) Process a scanned logsheet into XLSX
+formhtr process-logsheet \
+  --pdf-logsheet scan.pdf \
+  --pdf-template template.pdf \
+  --config-file config_annotated.json \
+  --output-file output.xlsx \
+  --google google_credentials.json \
+  --amazon amazon_credentials.json \
+  --azure azure_credentials.json
+```
+
 ### Create ROIs
 
 This functionality is split (for now) into two separate scripts.
